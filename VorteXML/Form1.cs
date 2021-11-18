@@ -33,20 +33,5 @@ namespace VorteXML
                 MessageBox.Show(MyData.Name.ToString());
             }
         }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            System.Xml.XmlDocument MyDoc = new System.Xml.XmlDocument();
-            //MyDoc.Load("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
-            MyDoc.Load("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
-
-            System.Xml.XmlNode MyNode = MyDoc.DocumentElement.SelectSingleNode("Element");
-
-            foreach (System.Xml.XmlNode AnotherNode in MyDoc.DocumentElement.ChildNodes)
-            {
-                string MyText = AnotherNode.InnerText;
-                MessageBox.Show(MyText);
-            }
-        }
     }
 }
