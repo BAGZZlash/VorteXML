@@ -19,20 +19,30 @@ namespace VorteXML
 
         private void HandleContent(System.Xml.Linq.XNode ThisNode)
         {
-            if (ThisNode.Parent.Name.NamespaceName == "Element" & ThisNode.Parent.Name.LocalName == "Input")
+            System.Xml.Linq.XElement ThisElement = (System.Xml.Linq.XElement)ThisNode;
+
+            if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Input")
             {
-                if (ThisNode.Name == "InputTypes") // ThisNode hat angeblich kein Feld "Name", obwohl unten bei Locals eins angezeigt wird... :-/
+                if (ThisElement.Name == "InputTypes")
+                {
+
+                }
+
+                if (ThisElement.Name == "AlternateControl")
                 {
 
                 }
             }
 
-            if (ThisNode.Parent.Name.NamespaceName == "Element" & ThisNode.Parent.Name.LocalName == "Output")
+            if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Output")
             {
+                if (ThisElement.Name == "OutputTypes")
+                {
 
+                }
             }
 
-            if (ThisNode.Parent.Name.NamespaceName == "Element" & ThisNode.Parent.Name.LocalName == "Control")
+            if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Control")
             {
 
             }
@@ -46,8 +56,8 @@ namespace VorteXML
             System.Xml.Linq.XElement FirstNode = null;
             System.Xml.Linq.XNode CurrentNode = null;
 
-            //System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
-            System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            //System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
 
             if (!MyXML.Root.FirstNode.ToString().ToLower().Contains("editorversion"))
             {
