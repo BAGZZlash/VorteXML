@@ -17,20 +17,44 @@ namespace VorteXML
             InitializeComponent();
         }
 
-        private void HandleContent(System.Xml.Linq.XNode ThisNode)
+        private void HandleContent(System.Xml.Linq.XNode ThisNode, int Counter)
         {
             System.Xml.Linq.XElement ThisElement = (System.Xml.Linq.XElement)ThisNode;
+            System.Xml.Linq.XElement SubElement;
+            System.Xml.Linq.XElement SubElement2;
+            int SubCounter;
+            int SubCounter2;
 
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Input")
             {
                 if (ThisElement.Name == "InputTypes")
                 {
-
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Input" + " - " + ThisElement.Parent.LastAttribute + ". Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+                        SubCounter++;
+                    }
                 }
 
                 if (ThisElement.Name == "AlternateControl")
                 {
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": AlternateControl. Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
 
+                        SubCounter2 = 0;
+                        foreach(var nodes2 in SubElement.Nodes())
+                        {
+                            SubElement2 = (System.Xml.Linq.XElement)nodes2;
+                            System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", value name: '" + SubElement2.Value + "', attribute: " + SubElement2.FirstAttribute + ".");
+                            SubCounter2++;
+                        }
+                        SubCounter++;
+                    }
                 }
             }
 
@@ -38,13 +62,60 @@ namespace VorteXML
             {
                 if (ThisElement.Name == "OutputTypes")
                 {
-
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Output" + " - " + ThisElement.Parent.LastAttribute + ". Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+                        SubCounter++;
+                    }
                 }
             }
 
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Control")
             {
+                System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Control. Type " + ThisElement.Name + ", " + ThisElement.Parent.LastAttribute + ".");
 
+                if (ThisElement.Name == "{Control}Slider")
+                {
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Slider property " + (SubCounter + 1).ToString() + ": " + SubElement.Value + ", attribute: " + SubElement.FirstAttribute + ".");
+                        SubCounter++;
+                    }
+                }
+
+                if (ThisElement.Name == "{Control}Checkbox")
+                {
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Checkbox. Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+
+                        SubCounter2 = 0;
+                        foreach (var nodes2 in SubElement.Nodes())
+                        {
+                            SubElement2 = (System.Xml.Linq.XElement)nodes2;
+                            System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", reference to: " + SubElement2.FirstAttribute + ".");
+                            SubCounter2++;
+                        }
+                        SubCounter++;
+                    }
+                }
+
+                if (ThisElement.Name == "{Control}Dropdown")
+                {
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+                        System.Windows.Forms.MessageBox.Show("Dropdown property " + (SubCounter + 1).ToString() + ": " + SubElement.FirstAttribute + ".");
+                        SubCounter++;
+                    }
+                }
             }
         }
 
@@ -53,6 +124,7 @@ namespace VorteXML
             string NodeStyle;
             string EditorVersion;
             string NodeTitle;
+            int Counter = 0;
             System.Xml.Linq.XElement FirstNode = null;
             System.Xml.Linq.XNode CurrentNode = null;
 
@@ -100,33 +172,35 @@ namespace VorteXML
             {
                 // Iterate through the first row's contents.
 
-                HandleContent(Children);
+                HandleContent(Children, Counter);
             }
             CurrentNode = FirstNode.NextNode;
+            Counter++;
 
             while (CurrentNode != null)
             {
                 // Iterate through the following rows.
-                foreach (var Children in FirstNode.Nodes())
+                foreach (var Children in ((System.Xml.Linq.XElement)CurrentNode).Nodes())
                 {
                     // Iterate through the following rows' contents.
 
-                    HandleContent(Children);
+                    HandleContent(Children, Counter);
                 }
                 CurrentNode = CurrentNode.NextNode;
+                Counter++;
             }
 
             // 8<---------------------------------------------------------------------------------------------
 
-            System.Xml.Linq.XNamespace elementNS = "Element";
+            //System.Xml.Linq.XNamespace elementNS = "Element";
 
-            var MyQuery = from c in MyXML.Root.Descendants(elementNS + "Input")
-                          select c.Element("InputTypes").Elements();
+            //var MyQuery = from c in MyXML.Root.Descendants(elementNS + "Input")
+            //              select c.Element("InputTypes").Elements();
 
-            foreach (System.Xml.Linq.XElement MyData in MyQuery.First())
-            {
-                MessageBox.Show(MyData.Name.ToString());
-            }
+            //foreach (System.Xml.Linq.XElement MyData in MyQuery.First())
+            //{
+            //    MessageBox.Show(MyData.Name.ToString());
+            //}
         }
     }
 }
