@@ -53,6 +53,7 @@ namespace VorteXML
                             System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", value name: '" + SubElement2.Value + "', attribute: " + SubElement2.FirstAttribute + ".");
                             SubCounter2++;
                         }
+
                         SubCounter++;
                     }
                 }
@@ -102,6 +103,7 @@ namespace VorteXML
                             System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", reference to: " + SubElement2.FirstAttribute + ".");
                             SubCounter2++;
                         }
+
                         SubCounter++;
                     }
                 }
