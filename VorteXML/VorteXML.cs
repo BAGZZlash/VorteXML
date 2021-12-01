@@ -15,7 +15,15 @@ namespace VorteXML
             Control
         }
 
-        public enum InputType
+        public enum ControlType
+        {
+            Slider,
+            Checkbox,
+            Dropdown,
+            Textbox
+        }
+
+        public enum ConnectorType
         {
             // Vector types
             VectorPoint,
@@ -26,17 +34,58 @@ namespace VorteXML
             // ...
         }
 
+        public struct Slider
+        {
+            string Style;
+            float Start;
+            float End;
+        }
+
+        public struct Checkbox
+        {
+            string Style;
+            int Reference;
+        }
+
+        public struct Dropdown
+        {
+            string Style;
+            string[] Values;
+        }
+
+        public struct Textbox
+        {
+            string Default;
+        }
+
         public struct InputRow
         {
-            InputType[] inputTypes;
+            ConnectorType[] inputTypes;
+            Textbox[] altControls;
+        }
 
+        public struct OutputRow
+        {
+            ConnectorType[] outputTypes;
+        }
+
+        public struct ControlRow
+        {
+            ConnectorType[] outputTypes;
+            Slider slider;
+            Checkbox checkbox;
+            Dropdown dropdown;
+            Textbox textbox;
         }
 
         public struct ToolRow
         {
             int Index;
             RowType rowType;
-
+            string Name;
+            InputRow inputRow; // Beim Instanziieren die Member dimensionieren.
+            OutputRow outputRow;
+            ControlRow controlRow;
         }
 
         private ToolRow[] ToolRows;
