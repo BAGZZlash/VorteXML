@@ -8,11 +8,17 @@ namespace VorteXML
 {
     class VorteXML
     {
+        private string NodeStyle;
+        private string EditorVersion;
+        private string NodeTitle;
+
         public enum RowType
         {
             Input,
             Output,
             Control
+
+            //...?
         }
 
         public enum ControlType
@@ -21,6 +27,8 @@ namespace VorteXML
             Checkbox,
             Dropdown,
             Textbox
+
+            //...
         }
 
         public enum ConnectorType
@@ -36,68 +44,72 @@ namespace VorteXML
 
         public struct Slider
         {
-            string Style;
-            float Start;
-            float End;
+            public string Style;
+            public float Start;
+            public float End;
         }
 
         public struct Checkbox
         {
-            string Style;
-            int Reference;
+            public string Style;
+            public int Reference;
         }
 
         public struct Dropdown
         {
-            string Style;
-            string[] Values;
+            public string Style;
+            public string[] Values;
         }
 
         public struct Textbox
         {
-            string Default;
+            public string Default;
+            public string Name;
+        }
+
+        public struct AltControls
+        {
+            public ConnectorType inputType;
+            public Textbox[] textboxes;
         }
 
         public struct InputRow
         {
-            ConnectorType[] inputTypes;
-            Textbox[] altControls;
+            public ConnectorType[] inputTypes;
+            public AltControls[] altControls;
         }
 
         public struct OutputRow
         {
-            ConnectorType[] outputTypes;
+            public ConnectorType[] outputTypes;
         }
 
         public struct ControlRow
         {
-            ConnectorType[] outputTypes;
-            Slider slider;
-            Checkbox checkbox;
-            Dropdown dropdown;
-            Textbox textbox;
+            public ConnectorType[] outputTypes;
+            public Slider slider;
+            public Checkbox checkbox;
+            public Dropdown dropdown;
+            public Textbox textbox;
         }
 
         public struct ToolRow
         {
-            int Index;
-            RowType rowType;
-            string Name;
-            InputRow inputRow; // Beim Instanziieren die Member dimensionieren.
-            OutputRow outputRow;
-            ControlRow controlRow;
+            public RowType rowType;
+            public string Name;
+            public InputRow inputRow; // Beim Instanziieren die Member dimensionieren.
+            public OutputRow outputRow;
+            public ControlRow controlRow;
         }
 
-        private ToolRow[] ToolRows;
+        public ToolRow[] ToolRows;
 
         //-----------------------------------------------------------------------------------------------------
 
         public VorteXML(System.Xml.Linq.XDocument MyXML)
         {
-            string NodeStyle;
-            string EditorVersion;
-            string NodeTitle;
             int Counter = 0;
+            int NumRows = -1;
             System.Xml.Linq.XElement FirstNode = null;
             System.Xml.Linq.XNode CurrentNode = null;
 
@@ -127,7 +139,9 @@ namespace VorteXML
                     {
                         if (attribs.Name == "rowNr")
                         {
-                            if (Convert.ToInt32(attribs.Value) == 1)
+                            NumRows = Convert.ToInt32(attribs.Value);
+
+                            if (NumRows == 1)
                             {
                                 FirstNode = nodes;
                                 break;
@@ -135,8 +149,12 @@ namespace VorteXML
                         }
                     }
                 }
-                if (FirstNode != null) break;
+                //if (FirstNode != null) break;
             }
+
+            if (NumRows == -1) throw new Exception("No rows present.");
+
+            ToolRows = new ToolRow[NumRows];
 
             foreach (var Children in FirstNode.Nodes())
             {
@@ -173,13 +191,35 @@ namespace VorteXML
 
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Input")
             {
+                ToolRows[Counter].rowType = RowType.Input;
+
                 if (ThisElement.Name == "InputTypes")
                 {
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
+                        SubCounter++;
+                    }
+
+                    ToolRows[Counter].inputRow.inputTypes = new ConnectorType[SubCounter];
+                    foreach (var attribs in ThisElement.Parent.Attributes())
+                    {
+                        if (attribs.Name == "name")
+                        {
+                            ToolRows[Counter].Name = attribs.Value;
+                            break;
+                        }
+                    }
+
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Input" + " - " + ThisElement.Parent.LastAttribute + ". Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+
+                        if (SubElement.Name == "{Vector}Point") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorPoint;
+                        if (SubElement.Name == "{Vector}Line") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorLine;
+                        if (SubElement.Name == "{Vector}Polygon") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorPolygon;
+
                         SubCounter++;
                     }
                 }
@@ -189,14 +229,51 @@ namespace VorteXML
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
+                        SubCounter++;
+                    }
+
+                    ToolRows[Counter].inputRow.altControls = new AltControls[SubCounter];
+                    foreach (var attribs in ThisElement.Parent.Attributes())
+                    {
+                        if (attribs.Name == "name")
+                        {
+                            ToolRows[Counter].Name = attribs.Value;
+                            break;
+                        }
+                    }
+
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": AlternateControl. Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+
+                        if (SubElement.Name == "{Vector}Point") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorPoint;
+                        if (SubElement.Name == "{Vector}Line") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorLine;
+                        if (SubElement.Name == "{Vector}Polygon") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorPolygon;
+
+                        SubCounter2 = 0;
+                        foreach (var nodes2 in SubElement.Nodes())
+                        {
+                            SubCounter2++;
+                        }
+                        ToolRows[Counter].inputRow.altControls[SubCounter].textboxes = new Textbox[SubCounter2];
 
                         SubCounter2 = 0;
                         foreach (var nodes2 in SubElement.Nodes())
                         {
                             SubElement2 = (System.Xml.Linq.XElement)nodes2;
-                            System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", value name: '" + SubElement2.Value + "', attribute: " + SubElement2.FirstAttribute + ".");
+
+                            ToolRows[Counter].inputRow.altControls[SubCounter].textboxes[SubCounter2].Name = SubElement2.Value;
+
+                            foreach (var attribs in SubElement2.Attributes())
+                            {
+                                if (attribs.Name == "default")
+                                {
+                                    ToolRows[Counter].inputRow.altControls[SubCounter].textboxes[SubCounter2].Default = attribs.Value;
+                                    break;
+                                }
+                            }
+                            
                             SubCounter2++;
                         }
 

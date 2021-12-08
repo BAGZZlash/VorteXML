@@ -207,7 +207,8 @@ namespace VorteXML
 
         private void button2_Click(object sender, EventArgs e)
         {
-            System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            //System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
 
             VorteXML MyVorteXML = new VorteXML(MyXML);
         }
