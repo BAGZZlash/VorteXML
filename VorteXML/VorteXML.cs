@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VorteXML
+﻿namespace VorteXML
 {
     class VorteXML
     {
-        private string NodeStyle;
-        private string EditorVersion;
-        private string NodeTitle;
+        private string IntNodeStyle;
+        private string IntEditorVersion;
+        private string IntNodeTitle;
+        
+        public ToolRow[] ToolRows;
 
         public enum RowType
         {
@@ -40,6 +36,8 @@ namespace VorteXML
 
             // e.g. raster types
             // ...
+
+            // Add primitive types such as int, float, string, ...? E.g. for controls.
         }
 
         public struct Slider
@@ -63,8 +61,9 @@ namespace VorteXML
 
         public struct Textbox
         {
-            public string Default;
+            public string Style;
             public string Name;
+            public string Value;
         }
 
         public struct AltControls
@@ -86,7 +85,7 @@ namespace VorteXML
 
         public struct ControlRow
         {
-            public ConnectorType[] outputTypes;
+            public ControlType controlType;
             public Slider slider;
             public Checkbox checkbox;
             public Dropdown dropdown;
@@ -95,18 +94,60 @@ namespace VorteXML
 
         public struct ToolRow
         {
-            public RowType rowType;
+            public int Index;
             public string Name;
-            public InputRow inputRow; // Beim Instanziieren die Member dimensionieren.
+            public RowType rowType;
+            public InputRow inputRow;
             public OutputRow outputRow;
             public ControlRow controlRow;
         }
 
-        public ToolRow[] ToolRows;
+        //-----------------------------------------------------------------------------------------------------
+        // Getters and setters
+
+        public string NodeStyle
+        {
+            get { return (IntNodeStyle); }
+            set { NodeStyle = value; }
+        }
+
+        public string EditorVersion
+        {
+            get { return (IntEditorVersion); }
+            set { IntEditorVersion = value; }
+        }
+
+        public string NodeTitle
+        {
+            get { return (IntNodeTitle); }
+            set { IntNodeTitle = value; }
+        }
 
         //-----------------------------------------------------------------------------------------------------
+        // Constructors
+
+        public VorteXML()
+        {
+            // Nothing useful to do here...
+        }
+
+        public VorteXML(string FileName)
+        {
+            if (!System.IO.File.Exists(FileName)) throw new System.Exception("File not found.");
+
+            System.Xml.Linq.XDocument MyXML = System.Xml.Linq.XDocument.Load(FileName);
+            ImportXML(MyXML);
+        }
 
         public VorteXML(System.Xml.Linq.XDocument MyXML)
+        {
+            ImportXML(MyXML);
+        }
+
+        //-----------------------------------------------------------------------------------------------------
+        // Private methods
+
+        private void ImportXML(System.Xml.Linq.XDocument MyXML)
         {
             int Counter = 0;
             int NumRows = -1;
@@ -115,7 +156,7 @@ namespace VorteXML
 
             if (!MyXML.Root.FirstNode.ToString().ToLower().Contains("editorversion"))
             {
-                throw new Exception("No VorteXML format detected.");
+                throw new System.Exception("No VorteXML format detected.");
             }
 
             var RootDescendants = MyXML.Root.Descendants();
@@ -126,12 +167,12 @@ namespace VorteXML
                 {
                     foreach (var attribs in nodes.Attributes())
                     {
-                        if (attribs.Name == "style") NodeStyle = attribs.Value;
-                        if (attribs.Name == "editorVersion") EditorVersion = attribs.Value;
+                        if (attribs.Name == "style") IntNodeStyle = attribs.Value;
+                        if (attribs.Name == "editorVersion") IntEditorVersion = attribs.Value;
                     }
                 }
 
-                if (nodes.Name == "NodeTitle") NodeTitle = nodes.Value;
+                if (nodes.Name == "NodeTitle") IntNodeTitle = nodes.Value;
 
                 if (nodes.Name.NamespaceName == "Element")
                 {
@@ -139,7 +180,7 @@ namespace VorteXML
                     {
                         if (attribs.Name == "rowNr")
                         {
-                            NumRows = Convert.ToInt32(attribs.Value);
+                            NumRows = System.Convert.ToInt32(attribs.Value);
 
                             if (NumRows == 1)
                             {
@@ -149,10 +190,9 @@ namespace VorteXML
                         }
                     }
                 }
-                //if (FirstNode != null) break;
             }
 
-            if (NumRows == -1) throw new Exception("No rows present.");
+            if (NumRows == -1) throw new System.Exception("No rows present.");
 
             ToolRows = new ToolRow[NumRows];
 
@@ -179,8 +219,6 @@ namespace VorteXML
             }
         }
 
-        //-----------------------------------------------------------------------------------------------------
-
         private void HandleContent(System.Xml.Linq.XNode ThisNode, int Counter)
         {
             System.Xml.Linq.XElement ThisElement = (System.Xml.Linq.XElement)ThisNode;
@@ -192,6 +230,7 @@ namespace VorteXML
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Input")
             {
                 ToolRows[Counter].rowType = RowType.Input;
+                ToolRows[Counter].Index = Counter;
 
                 if (ThisElement.Name == "InputTypes")
                 {
@@ -219,6 +258,7 @@ namespace VorteXML
                         if (SubElement.Name == "{Vector}Point") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorPoint;
                         if (SubElement.Name == "{Vector}Line") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorLine;
                         if (SubElement.Name == "{Vector}Polygon") ToolRows[Counter].inputRow.inputTypes[SubCounter] = ConnectorType.VectorPolygon;
+                        //...
 
                         SubCounter++;
                     }
@@ -250,6 +290,7 @@ namespace VorteXML
                         if (SubElement.Name == "{Vector}Point") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorPoint;
                         if (SubElement.Name == "{Vector}Line") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorLine;
                         if (SubElement.Name == "{Vector}Polygon") ToolRows[Counter].inputRow.altControls[SubCounter].inputType = ConnectorType.VectorPolygon;
+                        //...
 
                         SubCounter2 = 0;
                         foreach (var nodes2 in SubElement.Nodes())
@@ -269,7 +310,7 @@ namespace VorteXML
                             {
                                 if (attribs.Name == "default")
                                 {
-                                    ToolRows[Counter].inputRow.altControls[SubCounter].textboxes[SubCounter2].Default = attribs.Value;
+                                    ToolRows[Counter].inputRow.altControls[SubCounter].textboxes[SubCounter2].Value = attribs.Value;
                                     break;
                                 }
                             }
@@ -284,13 +325,37 @@ namespace VorteXML
 
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Output")
             {
+                ToolRows[Counter].rowType = RowType.Output;
+                ToolRows[Counter].Index = Counter;
+
                 if (ThisElement.Name == "OutputTypes")
                 {
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
+                        SubCounter++;
+                    }
+
+                    ToolRows[Counter].outputRow.outputTypes = new ConnectorType[SubCounter];
+                    foreach (var attribs in ThisElement.Parent.Attributes())
+                    {
+                        if (attribs.Name == "name")
+                        {
+                            ToolRows[Counter].Name = attribs.Value;
+                            break;
+                        }
+                    }
+
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Output" + " - " + ThisElement.Parent.LastAttribute + ". Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
+
+                        if (SubElement.Name == "{Vector}Point") ToolRows[Counter].outputRow.outputTypes[SubCounter] = ConnectorType.VectorPoint;
+                        if (SubElement.Name == "{Vector}Line") ToolRows[Counter].outputRow.outputTypes[SubCounter] = ConnectorType.VectorLine;
+                        if (SubElement.Name == "{Vector}Polygon") ToolRows[Counter].outputRow.outputTypes[SubCounter] = ConnectorType.VectorPolygon;
+                        //...
+
                         SubCounter++;
                     }
                 }
@@ -298,33 +363,101 @@ namespace VorteXML
 
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Control")
             {
-                System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Control. Type " + ThisElement.Name + ", " + ThisElement.Parent.LastAttribute + ".");
+                ToolRows[Counter].rowType = RowType.Control;
+                ToolRows[Counter].Index = Counter;
+
+                foreach (var attribs in ThisElement.Parent.Attributes())
+                {
+                    if (attribs.Name == "name")
+                    {
+                        ToolRows[Counter].Name = attribs.Value;
+                        break;
+                    }
+                }
+
+                if (ThisElement.Name == "{Control}Slider") ToolRows[Counter].controlRow.controlType = ControlType.Slider;
+                if (ThisElement.Name == "{Control}Checkbox") ToolRows[Counter].controlRow.controlType = ControlType.Checkbox;
+                if (ThisElement.Name == "{Control}Dropdown") ToolRows[Counter].controlRow.controlType = ControlType.Dropdown;
+                if (ThisElement.Name == "{Control}Textbox") ToolRows[Counter].controlRow.controlType = ControlType.Textbox;
+                //...
 
                 if (ThisElement.Name == "{Control}Slider")
                 {
+                    foreach (var attribs in ThisElement.Attributes())
+                    {
+                        if (attribs.Name == "style")
+                        {
+                            ToolRows[Counter].controlRow.slider.Style = attribs.Value;
+                            break;
+                        }
+                    }
+
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Slider property " + (SubCounter + 1).ToString() + ": " + SubElement.Value + ", attribute: " + SubElement.FirstAttribute + ".");
+
+                        if (SubElement.Value == "Start")
+                        {
+                            foreach (var attribs in SubElement.Attributes())
+                            {
+                                if (attribs.Name == "default")
+                                {
+                                    ToolRows[Counter].controlRow.slider.Start = System.Convert.ToSingle(attribs.Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (SubElement.Value == "End")
+                        {
+                            foreach (var attribs in SubElement.Attributes())
+                            {
+                                if (attribs.Name == "default")
+                                {
+                                    ToolRows[Counter].controlRow.slider.End = System.Convert.ToSingle(attribs.Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    break;
+                                }
+                            }
+                        }
+
                         SubCounter++;
                     }
                 }
 
                 if (ThisElement.Name == "{Control}Checkbox")
                 {
+                    foreach (var attribs in ThisElement.Attributes())
+                    {
+                        if (attribs.Name == "style")
+                        {
+                            ToolRows[Counter].controlRow.checkbox.Style = attribs.Value;
+                            break;
+                        }
+                    }
+
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Row " + (Counter + 1).ToString() + ": Checkbox. Type " + (SubCounter + 1).ToString() + ": " + SubElement.Name + ".");
-
-                        SubCounter2 = 0;
-                        foreach (var nodes2 in SubElement.Nodes())
+                        if (SubElement.Name == "EnableElements")
                         {
-                            SubElement2 = (System.Xml.Linq.XElement)nodes2;
-                            System.Windows.Forms.MessageBox.Show((SubCounter2 + 1).ToString() + ", type: " + SubElement2.Name + ", reference to: " + SubElement2.FirstAttribute + ".");
-                            SubCounter2++;
+                            SubCounter2 = 0;
+                            foreach (var nodes2 in SubElement.Nodes())
+                            {
+                                SubElement2 = (System.Xml.Linq.XElement)nodes2;
+
+                                foreach (var attribs in SubElement2.Attributes())
+                                {
+                                    if (attribs.Name == "row")
+                                    {
+                                        ToolRows[Counter].controlRow.checkbox.Reference = System.Convert.ToInt32(attribs.Value);
+                                        break;
+                                    }
+                                }
+
+                                SubCounter2++;
+                            }
                         }
 
                         SubCounter++;
@@ -333,15 +466,83 @@ namespace VorteXML
 
                 if (ThisElement.Name == "{Control}Dropdown")
                 {
+                    foreach (var attribs in ThisElement.Attributes())
+                    {
+                        if (attribs.Name == "style")
+                        {
+                            ToolRows[Counter].controlRow.dropdown.Style = attribs.Value;
+                            break;
+                        }
+                    }
+
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubCounter++;
+                    }
+                    ToolRows[Counter].controlRow.dropdown.Values = new string[SubCounter];
+
                     SubCounter = 0;
                     foreach (var nodes in ThisElement.Nodes())
                     {
                         SubElement = (System.Xml.Linq.XElement)nodes;
-                        System.Windows.Forms.MessageBox.Show("Dropdown property " + (SubCounter + 1).ToString() + ": " + SubElement.FirstAttribute + ".");
+
+                        foreach (var attribs in SubElement.Attributes())
+                        {
+                            if (attribs.Name == "value")
+                            {
+                                ToolRows[Counter].controlRow.dropdown.Values[SubCounter] = attribs.Value;
+                                break;
+                            }
+                        }
+
+                        SubCounter++;
+                    }
+                }
+
+                if (ThisElement.Name == "{Control}Textbox")
+                {
+                    foreach (var attribs in ThisElement.Attributes())
+                    {
+                        if (attribs.Name == "style")
+                        {
+                            ToolRows[Counter].controlRow.textbox.Style = attribs.Value;
+                            break;
+                        }
+                    }
+
+                    SubCounter = 0;
+                    foreach (var nodes in ThisElement.Nodes())
+                    {
+                        SubElement = (System.Xml.Linq.XElement)nodes;
+
+                        foreach (var attribs in SubElement.Attributes())
+                        {
+                            if (attribs.Name == "value")
+                            {
+                                ToolRows[Counter].controlRow.textbox.Value = attribs.Value;
+                                break;
+                            }
+                        }
+
+                        foreach (var attribs in SubElement.Attributes())
+                        {
+                            if (attribs.Name == "name")
+                            {
+                                ToolRows[Counter].controlRow.textbox.Name = attribs.Value;
+                                break;
+                            }
+                        }
+
                         SubCounter++;
                     }
                 }
             }
         }
+
+        //-----------------------------------------------------------------------------------------------------
+        // Public methods
+
+        //...
     }
 }
