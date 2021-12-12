@@ -230,7 +230,7 @@
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Input")
             {
                 ToolRows[Counter].rowType = RowType.Input;
-                ToolRows[Counter].Index = Counter;
+                ToolRows[Counter].Index = Counter + 1;
 
                 if (ThisElement.Name == "InputTypes")
                 {
@@ -326,7 +326,7 @@
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Output")
             {
                 ToolRows[Counter].rowType = RowType.Output;
-                ToolRows[Counter].Index = Counter;
+                ToolRows[Counter].Index = Counter + 1;
 
                 if (ThisElement.Name == "OutputTypes")
                 {
@@ -364,7 +364,7 @@
             if (ThisElement.Parent.Name.NamespaceName == "Element" & ThisElement.Parent.Name.LocalName == "Control")
             {
                 ToolRows[Counter].rowType = RowType.Control;
-                ToolRows[Counter].Index = Counter;
+                ToolRows[Counter].Index = Counter + 1;
 
                 foreach (var attribs in ThisElement.Parent.Attributes())
                 {
@@ -540,9 +540,240 @@
             }
         }
 
+        private string ExportInput(int Row)
+        {
+            string InpString = "";
+            string Line;
+
+            Line = "\t\t" + "<Element:Input rowNr='" + ToolRows[Row].Index + "' name='" + ToolRows[Row].Name + "'>" + "\n";
+            Line = Line.Replace("'", "\"");
+            InpString = InpString + Line;
+
+            if (ToolRows[Row].inputRow.inputTypes.Length > 0)
+            {
+                Line = "\t\t\t" + "<InputTypes>" + "\n";
+                InpString = InpString + Line;
+
+                for (int i = 0; i < ToolRows[Row].inputRow.inputTypes.Length; i++)
+                {
+                    if (ToolRows[Row].inputRow.inputTypes[i] == ConnectorType.VectorPoint) Line = "\t\t\t\t" + "<Vector:Point />" + "\n";
+                    if (ToolRows[Row].inputRow.inputTypes[i] == ConnectorType.VectorLine) Line = "\t\t\t\t" + "<Vector:Line />" + "\n";
+                    if (ToolRows[Row].inputRow.inputTypes[i] == ConnectorType.VectorPolygon) Line = "\t\t\t\t" + "<Vector:Polygon />" + "\n";
+                    // ...
+
+                    InpString = InpString + Line;
+                }
+
+                Line = "\t\t\t" + "</InputTypes>" + "\n";
+                InpString = InpString + Line;
+            }
+
+            if (ToolRows[Row].inputRow.altControls.Length > 0)
+            {
+                Line = "\t\t\t" + "<AlternateControl>" + "\n";
+                InpString = InpString + Line;
+
+                for (int i = 0; i < ToolRows[Row].inputRow.altControls.Length; i++)
+                {
+                    string AltTypeStr = "";
+                    if (ToolRows[Row].inputRow.altControls[i].inputType == ConnectorType.VectorPoint) AltTypeStr = "Vector:Point";
+                    if (ToolRows[Row].inputRow.altControls[i].inputType == ConnectorType.VectorLine) AltTypeStr = "Vector:Line";
+                    if (ToolRows[Row].inputRow.altControls[i].inputType == ConnectorType.VectorPolygon) AltTypeStr = "Vector:Polygon";
+                    // ...
+
+                    Line = "\t\t\t\t" + "<" + AltTypeStr + ">" + "\n";
+                    InpString = InpString + Line;
+
+                    for (int j = 0; j < ToolRows[Row].inputRow.altControls[i].textboxes.Length; j++)
+                    {
+                        Line = "\t\t\t\t\t" + "<Value:Float default='" + ToolRows[Row].inputRow.altControls[i].textboxes[j].Value
+                                                                       + "'>" 
+                                                                       + ToolRows[Row].inputRow.altControls[i].textboxes[j].Name
+                                                                       + "</Value:Float>"
+                                                                       + "\n";
+                        Line = Line.Replace("'", "\"");
+                        InpString = InpString + Line;
+                    }
+
+                    Line = "\t\t\t\t" + "</" + AltTypeStr + ">" + "\n";
+                    InpString = InpString + Line;
+                }
+
+                Line = "\t\t\t" + "</AlternateControl>" + "\n";
+                InpString = InpString + Line;
+            }
+
+            Line = "\t\t" + "</Element:Input>" + "\n";
+            InpString = InpString + Line;
+
+
+            return (InpString);
+        }
+
+        private string ExportControl(int Row)
+        {
+            string ContString = "";
+            string Line;
+
+            Line = "\t\t" + "<Element:Control rowNr='" + ToolRows[Row].Index + "' name='" + ToolRows[Row].Name + "'>" + "\n";
+            Line = Line.Replace("'", "\"");
+            ContString = ContString + Line;
+
+            if (ToolRows[Row].controlRow.slider.Style != null)
+            {
+                Line = "\t\t\t" + "<Control:Slider style='" + ToolRows[Row].controlRow.slider.Style + "'>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t" + "<Value:Float default='" + ToolRows[Row].controlRow.slider.Start.ToString("0.0########", System.Globalization.CultureInfo.InvariantCulture) + "'>Start</Value:Float>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t" + "<Value:Float default='" + ToolRows[Row].controlRow.slider.End.ToString("0.0########", System.Globalization.CultureInfo.InvariantCulture) + "'>End</Value:Float>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t" + "</Control:Slider>" + "\n";
+                ContString = ContString + Line;
+            }
+
+            if (ToolRows[Row].controlRow.checkbox.Style != null)
+            {
+                Line = "\t\t\t" + "<Control:Checkbox style='" + ToolRows[Row].controlRow.checkbox.Style + "'>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t" + "<EnableElements>" + "\n";
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t\t" + "<Reference row='" + ToolRows[Row].controlRow.checkbox.Reference + "' />" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t" + "</EnableElements>" + "\n";
+                ContString = ContString + Line;
+
+                Line = "\t\t\t" + "</Control:Checkbox>" + "\n";
+                ContString = ContString + Line;
+            }
+
+            if (ToolRows[Row].controlRow.dropdown.Style != null)
+            {
+                Line = "\t\t\t" + "<Control:Dropdown style='" + ToolRows[Row].controlRow.dropdown.Style + "'>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                for (int i = 0; i < ToolRows[Row].controlRow.dropdown.Values.Length; i++)
+                {
+                    Line = "\t\t\t\t" + "<Value:String value='" + ToolRows[Row].controlRow.dropdown.Values[i] + "' />" + "\n";
+                    Line = Line.Replace("'", "\"");
+                    ContString = ContString + Line;
+                }
+
+                Line = "\t\t\t" + "</Control:Dropdown>" + "\n";
+                ContString = ContString + Line;
+            }
+
+            if (ToolRows[Row].controlRow.textbox.Style != null)
+            {
+                Line = "\t\t\t" + "<Control:Textbox style='" + ToolRows[Row].controlRow.textbox.Style + "'>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t\t" + "<Value:String default='" + ToolRows[Row].controlRow.textbox.Value + "'>" + ToolRows[Row].controlRow.textbox.Name + "</Value:String>" + "\n";
+                Line = Line.Replace("'", "\"");
+                ContString = ContString + Line;
+
+                Line = "\t\t\t" + "</Control:Dropdown>" + "\n";
+                ContString = ContString + Line;
+            }
+
+            Line = "\t\t" + "</Element:Control>" + "\n";
+            ContString = ContString + Line;
+
+            return (ContString);
+        }
+
+        private string ExportOutput(int Row)
+        {
+            string OutString = "";
+            string Line;
+
+            Line = "\t\t" + "<Element:Output rowNr='" + ToolRows[Row].Index + "' name='" + ToolRows[Row].Name + "'>" + "\n";
+            Line = Line.Replace("'", "\"");
+            OutString = OutString + Line;
+
+            Line = "\t\t\t" + "<OutputTypes>" + "\n";
+            OutString = OutString + Line;
+
+            for (int i = 0; i < ToolRows[Row].outputRow.outputTypes.Length; i++)
+            {
+                string OutTypeStr = "";
+               
+                if (ToolRows[Row].outputRow.outputTypes[i] == ConnectorType.VectorPoint) OutTypeStr = "Vector:Point";
+                if (ToolRows[Row].outputRow.outputTypes[i] == ConnectorType.VectorLine) OutTypeStr = "Vector:Line";
+                if (ToolRows[Row].outputRow.outputTypes[i] == ConnectorType.VectorPolygon) OutTypeStr = "Vector:Polygon";
+                // ...
+
+                Line = "\t\t\t\t" + "<" + OutTypeStr + " />" + "\n";
+                OutString = OutString + Line;
+            }
+
+            Line = "\t\t\t" + "</OutputTypes>" + "\n";
+            OutString = OutString + Line;
+
+            Line = "\t\t" + "</Element:Output>" + "\n";
+            Line = Line.Replace("'", "\"");
+            OutString = OutString + Line;
+
+            return (OutString);
+        }
+
         //-----------------------------------------------------------------------------------------------------
         // Public methods
 
-        //...
+        public string ExportXML()
+        {
+            string XMLFile = "";
+            string Line;
+
+            Line = "<?xml version='1.0' encoding='UTF-8'?>" + "\n";
+            Line = Line.Replace("'", "\"");
+            XMLFile = XMLFile + Line;
+
+            Line = "<root xmlns:Element='Element' xmlns:Vector='Vector' xmlns:Control='Control' xmlns:Value='Value'>" + "\n";
+            Line = Line.Replace("'", "\"");
+            XMLFile = XMLFile + Line;
+
+            Line = "<Node style='" + IntNodeStyle + "' editorVersion='" + IntEditorVersion + "'>" + "\n";
+            Line = Line.Replace("'", "\"");
+            XMLFile = XMLFile + Line;
+
+            Line = "\t" + "<NodeTitle>" + IntNodeTitle + "</NodeTitle>" + "\n";
+            XMLFile = XMLFile + Line;
+
+            Line = "\t" + "<NodeElements>" + "\n";
+            XMLFile = XMLFile + Line;
+
+            for (int i = 0; i < ToolRows.Length; i++)
+            {
+                if (ToolRows[i].rowType == RowType.Input) Line = ExportInput(i);
+                if (ToolRows[i].rowType == RowType.Control) Line = ExportControl(i);
+                if (ToolRows[i].rowType == RowType.Output) Line = ExportOutput(i);
+
+                XMLFile = XMLFile + Line;
+            }
+
+            Line = "\t" + "</NodeElements>" + "\n";
+            XMLFile = XMLFile + Line;
+
+            Line = "</Node>" + "\n";
+            XMLFile = XMLFile + Line;
+
+            Line = "</root>";
+            XMLFile = XMLFile + Line;
+
+            return (XMLFile);
+        }
     }
 }

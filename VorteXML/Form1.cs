@@ -10,6 +10,8 @@ namespace VorteXML
             InitializeComponent();
         }
 
+        private VorteXML MyVorteXML;
+
         private void button1_Click(object sender, EventArgs e)
         {
             // 8<---------------------------------------------------------------------------------------------
@@ -29,10 +31,20 @@ namespace VorteXML
 
         private void button2_Click(object sender, EventArgs e)
         {
-            VorteXML MyVorteXML = new VorteXML("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
-            //VorteXML MyVorteXML = new VorteXML("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            //MyVorteXML = new VorteXML("C:\\Temp\\Cloud\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
+            MyVorteXML = new VorteXML("C:\\Users\\ccroo\\ownCloud\\WFLO\\Vortex\\Node-Beschreibungs-Theorie\\VorteXML.xml");
 
             System.Diagnostics.Debug.WriteLine ("Number of rows: " + MyVorteXML.ToolRows.Length.ToString());
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (MyVorteXML == null) return;
+
+            string Exported = MyVorteXML.ExportXML();
+
+            //System.Windows.Forms.MessageBox.Show(Exported);
+            System.Diagnostics.Debug.WriteLine(Exported);
         }
     }
 }
