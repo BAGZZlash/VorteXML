@@ -2,7 +2,7 @@
 {
     class VorteXML
     {
-        private string IntNodeStyle;
+        private string IntNodeStyle; //Test: Banane.
         private string IntEditorVersion;
         private string IntNodeTitle;
         
